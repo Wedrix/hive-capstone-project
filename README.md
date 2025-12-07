@@ -1,12 +1,11 @@
 # Hive AI - Hive Weather Inference API
 
-A production-ready FastAPI service for machine learning model inference with support for single and batch predictions. This project is designed for weather classification and supports multiple team member models.
+A production-ready FastAPI service for machine learning model inference with support for single and batch predictions. This project is designed for weather classification using a single trained model.
 
 ## Features
 
 - 🚀 FastAPI with async support
 - 🤖 Weather model loading and inference for weather classification
-- 👥 Multiple team member models support
 - 📊 Single and batch prediction endpoints
 - 🎨 Modern web UI with Ant Design
 - 🏥 Health check and readiness endpoints
@@ -74,10 +73,10 @@ A production-ready FastAPI service for machine learning model inference with sup
    pip install -r requirements.txt
    ```
 
-4. **Add your weather models** (optional)
-   - For team member models: Place model files in `models/` directory with naming convention `{team_member_name_lowercase_with_underscores}.pkl`
-   - For default model: Place your trained model file (`.pkl`, `.joblib`, etc.) in the `models/` directory
-   - The service will use dummy models if model files are not found
+4. **Add your weather model** (required)
+   - Place your trained model file as `models/model.joblib`
+   - Place your scaler file as `models/scaler.joblib`
+   - The API will return an error if model files are not found
 
 5. **Run the application**
    ```bash
@@ -101,15 +100,13 @@ A production-ready FastAPI service for machine learning model inference with sup
 - `POST /api/v1/predict` - Single prediction
   ```json
   {
-    "features": [25.0, 60.0, 1013.25, 10.0, 10.0, 30.0],
-    "model_name": "KAMILE SEIDU"
+    "features": [25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"]
   }
   ```
   Response:
   ```json
   {
     "prediction": "sunny",
-    "model_name": "KAMILE SEIDU",
     "confidence": 0.95
   }
   ```
@@ -117,19 +114,19 @@ A production-ready FastAPI service for machine learning model inference with sup
 - `POST /api/v1/predict/batch` - Batch predictions
   ```json
   {
-    "features": [[25.0, 60.0, 1013.25, 10.0, 10.0, 30.0], [15.0, 80.0, 1005.0, 25.0, 5.0, 90.0]],
-    "model_name": "JAMES WEDAM ANEWENAH"
+    "features": [
+      [25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"],
+      [15.0, 80.0, 25.0, 50.0, 1005.0, 2.0, 5.0, "overcast", "spring", "mountain"]
+    ]
   }
   ```
 
-- `GET /api/v1/models` - List available models
-  Returns all available team member models and their status
+- `GET /api/v1/models` - Get model status
 
 ### Web Interface & API Documentation
 
 Once the server is running, visit:
 - **Web UI**: http://localhost:8000/home - Interactive Ant Design interface for testing model inferences
-  - Select team member models from dropdown
   - Single and batch prediction support
   - Real-time API status indicator
   - Weather classification results with visual indicators
@@ -139,16 +136,11 @@ Once the server is running, visit:
 
 ## Configuration
 
-Create a `.env` file in the root directory to customize settings:
+The application uses hardcoded model paths:
+- **Model**: `models/model.joblib`
+- **Scaler**: `models/scaler.joblib`
 
-```env
-MODEL_PATH=models/
-MODEL_NAME=model.pkl
-HOST=0.0.0.0
-PORT=8000
-DEBUG=false
-CORS_ORIGINS=["*"]
-```
+No environment configuration is required - simply place your artifacts in the `models/` directory.
 
 ## Docker Deployment
 
@@ -168,54 +160,40 @@ docker build -t ml-inference-api .
 docker run -p 8000:8000 -v $(pwd)/models:/app/models ml-inference-api
 ```
 
-## Team Member Models
+## Model Details
 
-This project supports multiple models mapped to team members. Each team member has their own model that can be selected for inference.
+This project uses a single weather classification model. The model accepts 10 features:
+- 7 numeric features: Temperature, Humidity, Wind Speed, Precipitation, Atmospheric Pressure, UV Index, Visibility
+- 3 categorical features: Cloud Cover, Season, Location
 
-### Team Members
+The categorical features are transformed into one-hot encoded vectors on the backend before prediction.
 
-The following team members have models available:
-1. KAMILE SEIDU
-2. JAMES WEDAM ANEWENAH
-3. ANTHONY SEDJOAH
-4. Nana Duah
-5. FRANKLIN HOGBA
-6. MASHUD BAWA ABDULAI
-7. Eric Okyere
-8. Alexander Adade
-9. PELEG TEYE DARKEY
+### Valid Categorical Values
 
-### Model File Naming
+- **Cloud Cover**: `cloudy`, `clear`, `partly cloudy`, `overcast`
+- **Season**: `spring`, `summer`, `autumn`, `fall`, `winter`
+- **Location**: `inland`, `mountain`, `coastal`
 
-Model files should be named using the team member's name in lowercase with underscores:
-- Format: `{name_lowercase_with_underscores}.pkl`
-- Example: `kamile_seidu.pkl`, `james_wedam_anewenah.pkl`
+### Adding Your Own Model
 
-Place model files in the `models/` directory. If a model file doesn't exist for a team member, a dummy model will be used.
-
-See [TEAM_MODELS.md](TEAM_MODELS.md) for detailed information.
-
-## Adding Your Own Model
-
-1. **Train and save your model** using scikit-learn, pickle, or joblib:
+1. **Train and save your model and scaler** using scikit-learn and joblib:
    ```python
-   import pickle
+   import joblib
    from sklearn.ensemble import RandomForestClassifier
+   from sklearn.preprocessing import StandardScaler
 
    # Train your model
    model = RandomForestClassifier()
    model.fit(X_train, y_train)
 
    # Save the model
-   with open('models/my_model.pkl', 'wb') as f:
-       pickle.dump(model, f)
+   joblib.dump(model, 'models/model.joblib')
+   
+   # Save the scaler
+   joblib.dump(scaler, 'models/scaler.joblib')
    ```
 
-2. **For team member models**: Name the file as `{team_member_name_lowercase_with_underscores}.pkl` and place it in `models/`
-
-3. **For default model**: Set `MODEL_NAME=my_model.pkl` in `.env` or `app/config.py`
-
-4. **Restart the service** - models are loaded on startup
+2. **Restart the service** - models are loaded on startup
 
 ## Development
 
@@ -248,9 +226,10 @@ Pre-commit checks include:
 
 - `app/main.py` - FastAPI application setup with static file serving
 - `app/routes/` - API endpoint definitions
-- `app/services/model_service.py` - Model loading and prediction logic with team member support
-- `app/config.py` - Configuration management including team member list
+- `app/services/model_service.py` - Model loading and prediction logic with feature transformation
+- `app/config.py` - Configuration management
 - `app/static/index.html` - Web UI with Ant Design components
+
 
 ## Testing
 
@@ -302,23 +281,18 @@ Example API calls:
 # Health check
 curl http://localhost:8000/health
 
-# List available models
-curl http://localhost:8000/api/v1/models
-
-# Single prediction with team member model
+# Single prediction
 curl -X POST "http://localhost:8000/api/v1/predict" \
   -H "Content-Type: application/json" \
   -d '{
-    "features": [25.0, 60.0, 1013.25, 10.0, 10.0, 30.0],
-    "model_name": "KAMILE SEIDU"
+    "features": [25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"]
   }'
 
 # Batch prediction
 curl -X POST "http://localhost:8000/api/v1/predict/batch" \
   -H "Content-Type: application/json" \
   -d '{
-    "features": [[25.0, 60.0, 1013.25, 10.0, 10.0, 30.0], [15.0, 80.0, 1005.0, 25.0, 5.0, 90.0]],
-    "model_name": "JAMES WEDAM ANEWENAH"
+    "features": [[25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"], [15.0, 80.0, 25.0, 50.0, 1005.0, 2.0, 5.0, "overcast", "spring", "mountain"]]
   }'
 ```
 
@@ -327,10 +301,14 @@ curl -X POST "http://localhost:8000/api/v1/predict/batch" \
 This project is designed for weather classification. The model accepts weather features:
 - Temperature (°C)
 - Humidity (%)
-- Pressure (hPa)
 - Wind Speed (km/h)
+- Precipitation (%)
+- Atmospheric Pressure (hPa)
+- UV Index
 - Visibility (km)
-- Cloud Cover (%)
+- Cloud Cover (categorical: cloudy, clear, partly cloudy, overcast)
+- Season (categorical: spring, summer, autumn, fall, winter)
+- Location (categorical: inland, mountain, coastal)
 
 And predicts weather types such as:
 - ☀️ Sunny
@@ -342,18 +320,7 @@ And predicts weather types such as:
 
 ## Team
 
-This project is developed by the Hive AI team:
-1. KAMILE SEIDU
-2. JAMES WEDAM ANEWENAH
-3. ANTHONY SEDJOAH
-4. Nana Duah
-5. FRANKLIN HOGBA
-6. MASHUD BAWA ABDULAI
-7. Eric Okyere
-8. Alexander Adade
-9. PELEG TEYE DARKEY
-
-Each team member can have their own trained model for inference.
+This project is developed by the Hive AI team.
 
 ## License
 

@@ -4,281 +4,295 @@ Model service for loading and managing weather inference models
 
 import logging
 import os
-import pickle
-import re
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+import joblib
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
-
-from app.config import settings
+import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+# Model paths
+BASE_DIR = os.path.join(os.path.dirname(__file__), '../../models')
+MODEL_PATH = os.path.join(BASE_DIR, 'model.joblib')
+SCALER_PATH = os.path.join(BASE_DIR, 'scaler.joblib')
 
 
 class ModelService:
     """Service for managing weather inference models"""
 
-    _models: Dict[str, Any] = {}
+    _model: Any = None
+    _scaler: Any = None
     _models_loaded: bool = False
+    _model_ready: bool = False  # Track if real model is loaded (not dummy)
+    _training_feature_cols: List[str] = None  # Columns used in training X
 
-    @classmethod
-    def _validate_model_path(cls, file_path: str) -> bool:
-        """
-        Validate that the model path is safe and within the allowed directory.
-        Prevents path traversal attacks.
-
-        Args:
-            file_path: Path to validate
-
-        Returns:
-            True if path is safe, False otherwise
-        """
-        try:
-            # Resolve to absolute path
-            resolved_path = Path(file_path).resolve()
-            # Get the base model directory as absolute path
-            base_path = Path(settings.MODEL_PATH).resolve()
-
-            # Check if resolved path is within base path
-            # This prevents path traversal attacks (e.g., ../../../etc/passwd)
-            return str(resolved_path).startswith(str(base_path))
-        except Exception:
-            return False
+    # Feature column names matching training data
+    NUMERICAL_COLS = ['Temperature', 'Humidity', 'Wind Speed', 'Precipitation (%)', 
+                      'Atmospheric Pressure', 'UV Index', 'Visibility (km)']
+    CATEGORICAL_COLS = ['Cloud Cover', 'Season', 'Location']
+    
+    # Valid categorical values
+    VALID_CLOUD_COVER = {'cloudy', 'clear', 'partly cloudy', 'overcast'}
+    VALID_SEASON = {'spring', 'summer', 'autumn', 'fall', 'winter'}
+    VALID_LOCATION = {'mountain', 'coastal', 'inland'}
 
     @classmethod
     def load_models(cls):
-        """Load weather inference models from disk"""
+        """Load the weather inference model and scaler from disk"""
         try:
-            # Load models for each team member
-            for member_name in settings.TEAM_MEMBERS:
-                # Try to load model file for this member
-                # Format: models/{member_name_sanitized}.pkl
-                sanitized_name = member_name.lower().replace(" ", "_")
-                # Remove any potentially dangerous characters
-                sanitized_name = "".join(
-                    c for c in sanitized_name if c.isalnum() or c in ("_", "-")
-                )
-                model_path = os.path.join(settings.MODEL_PATH, f"{sanitized_name}.pkl")
-
-                # Validate path before using
-                if not cls._validate_model_path(model_path):
-                    logger.warning(
-                        f"Invalid model path for {member_name}: {model_path}. "
-                        f"Using dummy model."
-                    )
-                    cls._models[member_name] = DummyModel()
-                    continue
-
-                if os.path.exists(model_path):
-                    try:
-                        # SECURITY NOTE: pickle.load() can execute arbitrary code.
-                        # In production, consider using joblib or validating model files.
-                        # For now, we only load from trusted sources (models/ directory).
-                        with open(model_path, "rb") as f:
-                            cls._models[member_name] = pickle.load(f)
-                        logger.info(f"Model loaded for {member_name} from {model_path}")
-                    except Exception as e:
-                        logger.warning(
-                            f"Error loading model for {member_name}: {str(e)}. "
-                            f"Using dummy model."
-                        )
-                        cls._models[member_name] = DummyModel()
-                else:
-                    # Use dummy model if file doesn't exist
-                    logger.info(
-                        f"Model file not found for {member_name} at {model_path}. "
-                        f"Using dummy model."
-                    )
-                    cls._models[member_name] = DummyModel()
-
-            # Also load default model if it exists
-            default_model_path = os.path.join(settings.MODEL_PATH, settings.MODEL_NAME)
-            if cls._validate_model_path(default_model_path) and os.path.exists(default_model_path):
+            # Load model
+            if os.path.exists(MODEL_PATH):
                 try:
-                    with open(default_model_path, "rb") as f:
-                        cls._models["default"] = pickle.load(f)
-                    logger.info(f"Default model loaded from {default_model_path}")
+                    cls._model = joblib.load(MODEL_PATH)
+                    cls._model_ready = True
+                    logger.info(f"Model loaded from {MODEL_PATH}")
                 except Exception as e:
-                    logger.warning(f"Error loading default model: {str(e)}. Using dummy model.")
-                    if "default" not in cls._models:
-                        cls._models["default"] = DummyModel()
-            # Always ensure default model exists for backward compatibility
-            if "default" not in cls._models:
-                cls._models["default"] = DummyModel()
-                logger.info("Using default dummy model.")
+                    logger.error(f"Error loading model: {str(e)}")
+                    cls._model_ready = False
+            else:
+                logger.warning(f"Model file not found at {MODEL_PATH}")
+                cls._model_ready = False
+
+            # Load scaler
+            if os.path.exists(SCALER_PATH):
+                try:
+                    cls._scaler = joblib.load(SCALER_PATH)
+                    logger.info(f"Scaler loaded from {SCALER_PATH}")
+                except Exception as e:
+                    logger.warning(f"Error loading scaler: {str(e)}. Scaler will be None.")
+                    cls._scaler = None
+            else:
+                logger.info("Scaler file not found. Scaler will be None.")
+                cls._scaler = None
+
+            # Try to infer training feature columns from the model's expected input
+            # This helps us align preprocessing output with what the model expects
+            if cls._model_ready and cls._model is not None:
+                try:
+                    # For sklearn models, check n_features_in_
+                    if hasattr(cls._model, 'n_features_in_'):
+                        n_features = cls._model.n_features_in_
+                        logger.info(f"Model expects {n_features} features")
+                        
+                        # Infer column names: 7 numerical + (n_features - 7) categorical encoded
+                        # Build list of expected categorical encoded columns
+                        # This is a placeholder - ideally saved with the model
+                        cls._training_feature_cols = cls.NUMERICAL_COLS.copy()
+                        
+                        # Add one-hot encoded categorical columns
+                        # Assuming: Cloud Cover (2), Season (4), Location (2) with drop_first=True
+                        # Based on standard one-hot encoding
+                        if n_features > 7:
+                            # Add placeholder encoded column names
+                            encoded_cols_count = n_features - 7
+                            for i in range(encoded_cols_count):
+                                cls._training_feature_cols.append(f"encoded_{i}")
+                            logger.info(f"Inferred {len(cls._training_feature_cols)} total feature columns")
+                except Exception as e:
+                    logger.warning(f"Could not infer training columns: {str(e)}")
+                    cls._training_feature_cols = None
 
             cls._models_loaded = True
-            logger.info(f"Models loaded successfully. Available models: {list(cls._models.keys())}")
+            if cls._model_ready:
+                logger.info("Model and scaler loaded successfully.")
+            else:
+                logger.warning("Model not ready for predictions.")
         except Exception as e:
             logger.error(f"Error loading models: {str(e)}")
-            # Fallback to dummy model
-            if not cls._models:
-                cls._models["default"] = DummyModel()
+            cls._model_ready = False
             cls._models_loaded = True
 
     @classmethod
     def unload_models(cls):
         """Unload models from memory"""
-        cls._models.clear()
+        cls._model = None
+        cls._scaler = None
         cls._models_loaded = False
+        cls._model_ready = False
         logger.info("Models unloaded")
 
     @classmethod
     def are_models_loaded(cls) -> bool:
-        """Check if models are loaded"""
-        return cls._models_loaded and len(cls._models) > 0
+        """Check if real models are loaded and ready"""
+        return cls._model_ready
 
     @classmethod
-    def predict(
-        cls, features: List[float], model_name: str = "default"
-    ) -> Tuple[Any, Optional[float]]:
+    def _preprocess_features(cls, features: List) -> np.ndarray:
         """
-        Make a prediction using the specified model
+        Preprocess raw input features to match training preprocessing exactly
+        
+        Mirrors the training preprocessing:
+        1. Create DataFrame with input features
+        2. One-hot encode categorical columns (drop_first=True)
+        3. Reindex to match training columns (fill missing with 0)
+        4. Scale numerical features
+        5. Ensure final column order matches training data
+        
+        Input: [temp, humidity, wind_speed, precipitation, pressure, uv_index, visibility, cloud_cover, season, location]
+        
+        Args:
+            features: List of 10 features (7 numeric + 3 categorical)
+        
+        Returns:
+            Preprocessed numpy array ready for model prediction
+        
+        Raises:
+            ValueError: If features are invalid
+        """
+        if len(features) != 10:
+            raise ValueError(f"Expected 10 features, got {len(features)}")
+        
+        # Extract numeric and categorical features
+        numeric_values = []
+        for i in range(7):
+            try:
+                val = float(features[i])
+                if not np.isfinite(val):
+                    raise ValueError(f"Feature {i} must be a finite number, got {features[i]}")
+                numeric_values.append(val)
+            except (ValueError, TypeError):
+                raise ValueError(f"Feature {i} must be numeric, got {features[i]}")
+        
+        # Extract and validate categorical values
+        cloud_cover = str(features[7]).strip().lower()
+        season = str(features[8]).strip().lower()
+        location = str(features[9]).strip().lower()
+        
+        # Validate categorical values
+        if cloud_cover not in cls.VALID_CLOUD_COVER:
+            raise ValueError(f"Invalid cloud_cover '{cloud_cover}'. Must be one of: {cls.VALID_CLOUD_COVER}")
+        if season not in cls.VALID_SEASON:
+            raise ValueError(f"Invalid season '{season}'. Must be one of: {cls.VALID_SEASON}")
+        if location not in cls.VALID_LOCATION:
+            raise ValueError(f"Invalid location '{location}'. Must be one of: {cls.VALID_LOCATION}")
+        
+        # Step 1: Create DataFrame for preprocessing (matching training format)
+        data_dict = {
+            'Temperature': numeric_values[0],
+            'Humidity': numeric_values[1],
+            'Wind Speed': numeric_values[2],
+            'Precipitation (%)': numeric_values[3],
+            'Atmospheric Pressure': numeric_values[4],
+            'UV Index': numeric_values[5],
+            'Visibility (km)': numeric_values[6],
+            'Cloud Cover': cloud_cover,
+            'Season': season,
+            'Location': location
+        }
+        
+        df = pd.DataFrame([data_dict])
+        
+        # Step 2: One-hot encode categorical features (drop_first=True to match training)
+        df_encoded = pd.get_dummies(df[cls.CATEGORICAL_COLS], drop_first=True).astype(int)
+        
+        # Step 3: Reindex to match training columns
+        # If scaler and model are loaded, we know the expected feature columns
+        if cls._training_feature_cols is not None:
+            # Get the one-hot encoded column names that should exist
+            x_encoded_cols = [col for col in cls._training_feature_cols 
+                            if col not in cls.NUMERICAL_COLS and col not in cls.CATEGORICAL_COLS]
+            
+            # Fill missing one-hot columns with 0
+            for col in x_encoded_cols:
+                if col not in df_encoded.columns:
+                    df_encoded[col] = 0
+            
+            # Reorder to match training X columns
+            df_encoded = df_encoded[x_encoded_cols]
+        
+        # Step 4: Scale numerical features (BEFORE concatenation, matching training)
+        if cls._scaler is not None:
+            df[cls.NUMERICAL_COLS] = cls._scaler.transform(df[cls.NUMERICAL_COLS])
+        
+        # Step 5: Concatenate numerical (scaled) and categorical (encoded) features
+        df_processed = pd.concat([df[cls.NUMERICAL_COLS].reset_index(drop=True), 
+                                 df_encoded.reset_index(drop=True)], axis=1)
+        
+        # Final step: Ensure column order matches training data X
+        if cls._training_feature_cols is not None:
+            df_processed = df_processed[cls._training_feature_cols]
+        
+        return df_processed.values[0]  # Return 1D array
+
+    @classmethod
+    def predict(cls, features: List) -> Tuple[str, float]:
+        """
+        Make a prediction for a single sample
 
         Args:
-            features: List of feature values
-            model_name: Name of the model to use
+            features: List of 10 features (7 numeric + 3 categorical)
 
         Returns:
             Tuple of (prediction, confidence)
 
         Raises:
-            ValueError: If model not found or input validation fails
+            RuntimeError: If model is not ready for predictions
+            ValueError: If features are invalid
         """
-        # Input validation
-        if not features:
-            raise ValueError("Features list cannot be empty")
-        if len(features) > 1000:  # Reasonable limit to prevent DoS
-            raise ValueError("Feature list too long (max 1000 features)")
-        if not all(isinstance(f, (int, float)) for f in features):
-            raise ValueError("All features must be numeric")
-        # Check for NaN or Inf values
-        if any(not np.isfinite(f) for f in features):
-            raise ValueError("Features must be finite numbers")
+        if not cls.are_models_loaded():
+            raise RuntimeError("Model not available. Please upload model.joblib and scaler.joblib to the models/ directory.")
 
-        # Validate model name to prevent injection
-        # Allow alphanumeric, spaces, underscores, and hyphens (for team member names)
-        if not isinstance(model_name, str) or not re.match(r"^[a-zA-Z0-9_\s-]+$", model_name):
-            raise ValueError("Invalid model name")
-
-        if model_name not in cls._models:
-            raise ValueError(
-                f"Model '{model_name}' not found. Available models: {list(cls._models.keys())}"
-            )
-
-        model = cls._models[model_name]
-
-        # Convert to numpy array
-        features_array = np.array(features).reshape(1, -1)
-
+        # Preprocess features (includes validation, one-hot encoding, and scaling)
+        preprocessed = cls._preprocess_features(features)
+        
         # Make prediction
-        prediction = model.predict(features_array)
-
-        # Try to get prediction probabilities for confidence
-        confidence = None
-        if hasattr(model, "predict_proba"):
-            try:
-                proba = model.predict_proba(features_array)
-                confidence = float(np.max(proba))
-            except Exception:
-                pass
-
-        # Convert numpy types to Python native types
-        if isinstance(prediction, np.ndarray):
-            prediction = prediction.tolist()[0]
+        predictions = cls._model.predict([preprocessed])
+        # Extract scalar from array
+        prediction = predictions[0] if isinstance(predictions, np.ndarray) else predictions
+        
+        # Get probabilities for confidence
+        if hasattr(cls._model, 'predict_proba'):
+            probas = cls._model.predict_proba([preprocessed])
+            proba = probas[0] if isinstance(probas, np.ndarray) else probas
+            confidence = float(np.max(proba))
         else:
-            prediction = float(prediction)
-
-        return prediction, confidence
+            confidence = 1.0
+        
+        return str(prediction), confidence
 
     @classmethod
-    def predict_batch(
-        cls, features_list: List[List[float]], model_name: str = "default"
-    ) -> List[Tuple[Any, Optional[float]]]:
+    def predict_batch(cls, features_list: List[List]) -> List[Tuple[str, float]]:
         """
-        Make batch predictions
+        Make predictions for multiple samples
 
         Args:
-            features_list: List of feature vectors
-            model_name: Name of the model to use
+            features_list: List of feature lists
 
         Returns:
-            List of (prediction, confidence) tuples
+            List of tuples (prediction, confidence)
 
         Raises:
-            ValueError: If model not found or input validation fails
+            RuntimeError: If model is not ready for predictions
+            ValueError: If features are invalid
         """
-        # Input validation
-        if not features_list:
-            raise ValueError("Features list cannot be empty")
-        if len(features_list) > 1000:  # Limit batch size to prevent DoS
-            raise ValueError("Batch size too large (max 1000 predictions)")
-        if not all(isinstance(f, list) for f in features_list):
-            raise ValueError("All items must be feature lists")
-        if not all(
-            isinstance(x, (int, float)) and np.isfinite(x)
-            for features in features_list
-            for x in features
-        ):
-            raise ValueError("All features must be finite numeric values")
+        if not cls.are_models_loaded():
+            raise RuntimeError("Model not found or misconfigured. Please add model.joblib and scaler.joblib to the root directory.")
 
-        # Validate model name to prevent injection
-        # Allow alphanumeric, spaces, underscores, and hyphens (for team member names)
-        if not isinstance(model_name, str) or not re.match(r"^[a-zA-Z0-9_\s-]+$", model_name):
-            raise ValueError("Invalid model name")
-
-        if model_name not in cls._models:
-            raise ValueError(
-                f"Model '{model_name}' not found. Available models: {list(cls._models.keys())}"
-            )
-
-        model = cls._models[model_name]
-        features_array = np.array(features_list)
-
-        # Make batch predictions
-        predictions = model.predict(features_array)
-
-        # Try to get prediction probabilities for confidence
-        confidences = None
-        if hasattr(model, "predict_proba"):
-            try:
-                proba = model.predict_proba(features_array)
-                confidences = np.max(proba, axis=1)
-            except Exception:
-                pass
-
-        # Convert numpy types to Python native types
-        if isinstance(predictions, np.ndarray):
-            predictions = predictions.tolist()
+        results = []
+        preprocessed_list = []
+        
+        # Preprocess all features
+        for features in features_list:
+            preprocessed = cls._preprocess_features(features)
+            preprocessed_list.append(preprocessed)
+        
+        # Make predictions
+        predictions = cls._model.predict(preprocessed_list)
+        
+        # Get probabilities for confidence
+        if hasattr(cls._model, 'predict_proba'):
+            probas = cls._model.predict_proba(preprocessed_list)
+            confidences = [float(np.max(p)) for p in probas]
         else:
-            predictions = [float(p) for p in predictions]
-
-        if confidences is not None:
-            confidences = confidences.tolist()
-            return list(zip(predictions, confidences))
-        else:
-            return [(pred, None) for pred in predictions]
+            confidences = [1.0] * len(predictions)
+        
+        for pred, conf in zip(predictions, confidences):
+            results.append((str(pred), conf))
+        
+        return results
 
     @classmethod
     def list_models(cls) -> List[str]:
         """List all available model names"""
-        return list(cls._models.keys())
-
-
-class DummyModel:
-    """
-    Dummy model for demonstration purposes
-    Returns a simple prediction based on feature sum
-    """
-
-    def predict(self, X):
-        """Simple prediction: return sum of features"""
-        return np.sum(X, axis=1)
-
-    def predict_proba(self, X):
-        """Simple probability: normalize feature sum"""
-        pred = self.predict(X)
-        # Convert to probabilities (simple normalization)
-        prob = np.abs(pred) / (np.abs(pred) + 1)
-        return np.column_stack([1 - prob, prob])
+        return ["default"]

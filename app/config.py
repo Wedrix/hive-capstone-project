@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # Model Settings
     MODEL_PATH: str = "models/"
-    MODEL_NAME: str = "model.pkl"
+    MODEL_NAME: str = "model.joblib"
 
     # Team Members / Model Mappings
     TEAM_MEMBERS: List[str] = [
@@ -34,6 +34,7 @@ class Settings(BaseSettings):
         "Eric Okyere",
         "Alexander Adade",
         "PELEG TEYE DARKEY",
+        "Silas Yakalim",
     ]
 
     # Server Settings

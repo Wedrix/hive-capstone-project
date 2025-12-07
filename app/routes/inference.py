@@ -4,7 +4,7 @@ Weather Inference endpoints
 
 import logging
 import re
-from typing import Any, List
+from typing import Any, List, Union
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
@@ -17,24 +17,15 @@ router = APIRouter()
 
 
 class PredictionRequest(BaseModel):
-    """Request model for predictions"""
+    """Request model for predictions
+    
+    Accepts features as: [temp, humidity, wind_speed, precipitation, pressure, uv_index, visibility, cloud_cover, season, location]
+    where cloud_cover, season, location are categorical string values
+    """
 
     model_config = {"protected_namespaces": ()}
 
-    features: List[float] = Field(..., min_length=1, max_length=1000, description="Feature values")
-    model_name: str = Field(default="default", description="Model name")
-
-    @field_validator("model_name")
-    @classmethod
-    def validate_model_name(cls, v: str) -> str:
-        """Validate model name contains only safe characters"""
-        # Allow alphanumeric, spaces, underscores, and hyphens for team member names
-        if not re.match(r"^[a-zA-Z0-9_\s-]+$", v):
-            raise ValueError(
-                "Model name must contain only alphanumeric characters, "
-                "spaces, underscores, and hyphens"
-            )
-        return v.strip()  # Trim whitespace
+    features: List[Union[float, str]] = Field(..., min_length=10, max_length=1000, description="Feature values: 7 numeric + 3 categorical")
 
 
 class BatchPredictionRequest(BaseModel):
@@ -42,29 +33,14 @@ class BatchPredictionRequest(BaseModel):
 
     model_config = {"protected_namespaces": ()}
 
-    features: List[List[float]] = Field(
-        ..., min_length=1, max_length=1000, description="List of feature vectors"
+    features: List[List[Union[float, str]]] = Field(
+        ..., min_length=1, max_length=1000, description="List of feature vectors: 7 numeric + 3 categorical each"
     )
-    model_name: str = Field(default="default", description="Model name")
-
-    @field_validator("model_name")
-    @classmethod
-    def validate_model_name(cls, v: str) -> str:
-        """Validate model name contains only safe characters"""
-        # Allow alphanumeric, spaces, underscores, and hyphens for team member names
-        if not re.match(r"^[a-zA-Z0-9_\s-]+$", v):
-            raise ValueError(
-                "Model name must contain only alphanumeric characters, "
-                "spaces, underscores, and hyphens"
-            )
-        return v.strip()  # Trim whitespace
-
 
 class PredictionResponse(BaseModel):
     """Response model for predictions"""
 
     prediction: Any
-    model_name: str
     confidence: float = None
 
 
@@ -74,7 +50,7 @@ async def predict(request: PredictionRequest):
     Single prediction endpoint
 
     Args:
-        request: PredictionRequest with features and optional model_name
+        request: PredictionRequest with 10 features (7 numeric + 3 categorical)
 
     Returns:
         PredictionResponse with prediction result
@@ -86,13 +62,9 @@ async def predict(request: PredictionRequest):
                 detail="Models are not loaded. Please wait for initialization.",
             )
 
-        prediction, confidence = ModelService.predict(
-            features=request.features, model_name=request.model_name
-        )
+        prediction, confidence = ModelService.predict(features=request.features)
 
-        return PredictionResponse(
-            prediction=prediction, model_name=request.model_name, confidence=confidence
-        )
+        return PredictionResponse(prediction=prediction, confidence=confidence)
     except ValueError as e:
         # Input validation errors - safe to expose
         raise HTTPException(status_code=400, detail=str(e))
@@ -116,7 +88,7 @@ async def predict_batch(request: BatchPredictionRequest):
     Batch prediction endpoint
 
     Args:
-        request: BatchPredictionRequest with list of feature vectors
+        request: BatchPredictionRequest with list of 10-feature vectors
 
     Returns:
         List of PredictionResponse objects
@@ -128,12 +100,10 @@ async def predict_batch(request: BatchPredictionRequest):
                 detail="Models are not loaded. Please wait for initialization.",
             )
 
-        predictions = ModelService.predict_batch(
-            features_list=request.features, model_name=request.model_name
-        )
+        predictions = ModelService.predict_batch(features_list=request.features)
 
         return [
-            PredictionResponse(prediction=pred, model_name=request.model_name, confidence=conf)
+            PredictionResponse(prediction=pred, confidence=conf)
             for pred, conf in predictions
         ]
     except ValueError as e:

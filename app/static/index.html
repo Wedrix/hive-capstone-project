@@ -65,12 +65,27 @@
         }
 
         .weather-type {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 1.2em;
-            margin: 10px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            padding: 32px 48px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 2em;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+        
+        .weather-type:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        
+        .weather-type .weather-icon {
+            font-size: 4em;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
         .weather-sunny {
@@ -79,34 +94,22 @@
             border: 2px solid #ffd591;
         }
 
-        .weather-rainy {
+        .weather-snowy {
             background: #e6f7ff;
             color: #1890ff;
             border: 2px solid #91d5ff;
         }
 
         .weather-cloudy {
-            background: #f0f0f0;
+            background: #f5f5f5;
+            color: #bfbfbf;
+            border: 2px solid #d9d9d9;
+        }
+
+        .weather-rainy {
+            background: #e8e8e8;
             color: #595959;
-            border: 2px solid #d9d9d9;
-        }
-
-        .weather-snowy {
-            background: #f6ffed;
-            color: #52c41a;
-            border: 2px solid #b7eb8f;
-        }
-
-        .weather-stormy {
-            background: #fff1f0;
-            color: #cf1322;
-            border: 2px solid #ffa39e;
-        }
-
-        .weather-foggy {
-            background: #fafafa;
-            color: #8c8c8c;
-            border: 2px solid #d9d9d9;
+            border: 2px solid #bfbfbf;
         }
 
         .weather-feature-input {
@@ -184,7 +187,7 @@
 
         .confidence-fill {
             height: 100%;
-            background: linear-gradient(90deg, #1890ff 0%, #722ed1 100%);
+            background: #1890ff;
             transition: width 0.3s ease;
             display: flex;
             align-items: center;
@@ -200,6 +203,202 @@
             background: #fafafa;
             border-radius: 6px;
             border: 1px solid #e8e8e8;
+        }
+
+        .prediction-result-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 16px;
+            padding: 32px;
+            color: #262626;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            margin-bottom: 24px;
+            transition: background 0.3s ease;
+        }
+        
+        .prediction-result-card.weather-sunny {
+            background: linear-gradient(135deg, #fff7e6 0%, #ffd591 100%);
+        }
+        
+        .prediction-result-card.weather-rainy {
+            background: linear-gradient(135deg, #e8e8e8 0%, #bfbfbf 100%);
+        }
+        
+        .prediction-result-card.weather-cloudy {
+            background: linear-gradient(135deg, #fafafa 0%, #e6e6e6 100%);
+        }
+        
+        .prediction-result-card.weather-snowy {
+            background: linear-gradient(135deg, #e6f7ff 0%, #91d5ff 100%);
+        }
+
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid rgba(0,0,0,0.08);
+        }
+
+        .prediction-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            color: #262626;
+        }
+
+        .model-badge {
+            background: #1890ff;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .weather-display-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .weather-label {
+            font-size: 14px;
+            color: rgba(0,0,0,0.45);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            transition: color 0.3s ease;
+        }
+        
+        .weather-label.weather-cloudy {
+            color: #bfbfbf;
+        }
+        
+        .weather-label.weather-rainy {
+            color: #595959;
+        }
+        
+        .weather-label.weather-snowy {
+            color: #1890ff;
+        }
+        
+        .weather-label.weather-sunny {
+            color: #fa8c16;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .weather-icon-large {
+            font-size: 6em;
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        .weather-name-large {
+            font-size: 3em;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: #1890ff;
+        }
+
+        .info-card-label {
+            font-size: 12px;
+            color: rgba(0,0,0,0.45);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .info-card-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1890ff;
+            line-height: 1.2;
+        }
+
+        .info-card-unit {
+            font-size: 14px;
+            color: rgba(0,0,0,0.65);
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .confidence-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .confidence-label {
+            font-size: 14px;
+            color: rgba(0,0,0,0.65);
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .confidence-percentage {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1890ff;
+        }
+
+        .fallback-banner {
+            background: linear-gradient(135deg, #ffd89b 0%, #fa8c16 100%);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(250, 140, 22, 0.2);
+        }
+
+        .fallback-icon {
+            font-size: 24px;
+        }
+
+        .fallback-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
         }
 
         /* Ant Design Tab Styling */
@@ -457,6 +656,36 @@
             margin-left: 4px;
         }
 
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.online {
+            background: #52c41a;
+            box-shadow: 0 0 0 rgba(82, 196, 26, 0.4);
+        }
+
+        .status-indicator.offline {
+            background: #ff4d4f;
+            box-shadow: 0 0 0 rgba(255, 77, 79, 0.4);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(82, 196, 26, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(82, 196, 26, 0);
+            }
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2em;
@@ -472,6 +701,10 @@
         <div class="header">
             <h1>Hive AI</h1>
             <p>Predict weather conditions using advanced machine learning models</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; justify-content: center;">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="statusText" style="font-size: 14px; color: rgba(0, 0, 0, 0.65);">Checking...</span>
+            </div>
         </div>
 
         <div class="ant-card">
@@ -484,9 +717,6 @@
                             <div class="ant-tabs-tab" onclick="switchTab('batch')" id="tab-batch">
                                 <span>Batch Prediction</span>
                             </div>
-                            <div class="ant-tabs-tab" onclick="switchTab('models')" id="tab-models">
-                                <span>Model Info</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -496,132 +726,87 @@
                     <form id="singleForm" class="ant-form ant-form-vertical">
                         <div class="ant-form-item">
                         <div class="ant-form-item-label">
-                            <label class="ant-form-item-required">Team Member</label>
-                        </div>
-                            <div class="ant-form-item-control">
-                            <div class="team-member-select-wrapper">
-                                <input type="text" id="modelName" class="team-member-select"
-                                       placeholder="Search or select a team member..."
-                                       autocomplete="off" required>
-                                <div id="modelNameDropdown" class="team-member-dropdown"></div>
-                                <input type="hidden" id="modelNameValue" name="modelName" value="">
-                            </div>
-                            <div id="teamMemberInfo" class="team-member-info" style="display: none;">
-                                <span class="team-member-info-icon">👤</span>
-                                <span id="selectedMemberName"></span>
-                                <span class="team-member-badge" id="modelStatusBadge">Model Ready</span>
-                            </div>
-                            <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 11px; margin-top: 4px;">
-                                Type to search team members
-                            </div>
-                            </div>
-                        </div>
-                        <div class="ant-form-item">
-                        <div class="ant-form-item-label">
                             <label class="ant-form-item-required">Weather Features</label>
                         </div>
                             <div class="ant-form-item-control">
                             <!-- Numeric Features -->
                             <div class="feature-section">
-                                <div class="feature-section-title">Numeric Features</div>
                                 <div class="weather-feature-input">
                                     <div class="feature-input-group">
                                         <label>Temperature (°C)</label>
-                                        <input type="number" id="temp" step="0.1" placeholder="25.0" value="25.0">
+                                        <input type="number" id="temp" step="0.01" placeholder="25.0" value="25.0" required>
                                 </div>
                                     <div class="feature-input-group">
                                         <label>Humidity (%)</label>
-                                        <input type="number" id="humidity" step="0.1" placeholder="60.0" value="60.0">
+                                        <input type="number" id="humidity" step="0.01" placeholder="60.0" value="60.0" required>
                                     </div>
                                     <div class="feature-input-group">
                                         <label>Wind Speed (km/h)</label>
-                                        <input type="number" id="windSpeed" step="0.1" placeholder="10.0" value="10.0">
+                                        <input type="number" id="windSpeed" step="0.01" placeholder="10.0" value="10.0" required>
                                     </div>
                                     <div class="feature-input-group">
                                         <label>Precipitation (%)</label>
-                                        <input type="number" id="precipitation" step="0.1" placeholder="0.0" value="0.0" min="0" max="100">
+                                        <input type="number" id="precipitation" step="0.01" placeholder="0.0" value="0.0" min="0" max="100" required>
                                     </div>
                                     <div class="feature-input-group">
                                         <label>Atmospheric Pressure (hPa)</label>
-                                        <input type="number" id="pressure" step="0.1" placeholder="1013.25" value="1013.25">
+                                        <input type="number" id="pressure" step="0.01" placeholder="1013.25" value="1013.25" required>
                                     </div>
                                     <div class="feature-input-group">
                                         <label>UV Index</label>
-                                        <input type="number" id="uvIndex" step="0.1" placeholder="5.0" value="5.0" min="0" max="11">
+                                        <input type="number" id="uvIndex" step="1" placeholder="5.0" value="5.0" min="0" max="11" required>
                                     </div>
                                     <div class="feature-input-group">
                                         <label>Visibility (km)</label>
-                                        <input type="number" id="visibility" step="0.1" placeholder="10.0" value="10.0">
+                                        <input type="number" id="visibility" step="0.01" placeholder="10.0" value="10.0" required>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Cloud Cover (One-Hot Encoded) -->
-                            <div class="feature-section">
-                                <div class="feature-section-title">Cloud Cover (Select one)</div>
-                                <div class="checkbox-group">
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="cloudCover_cloudy" name="cloudCover" value="cloudy">
-                                        <label for="cloudCover_cloudy">Cloudy</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="cloudCover_overcast" name="cloudCover" value="overcast">
-                                        <label for="cloudCover_overcast">Overcast</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="cloudCover_partly_cloudy" name="cloudCover" value="partly_cloudy">
-                                        <label for="cloudCover_partly_cloudy">Partly Cloudy</label>
-                                    </div>
+                            <!-- Categorical Features Row -->
+                            <div class="weather-feature-input">
+                                <!-- Cloud Cover -->
+                                <div class="feature-input-group">
+                                    <label>Cloud Cover</label>
+                                    <select id="cloudCover" class="ant-input" required>
+                                        <option value="">-- Select --</option>
+                                        <option value="cloudy">Cloudy</option>
+                                        <option value="clear">Clear</option>
+                                        <option value="partly cloudy">Partly Cloudy</option>
+                                        <option value="overcast">Overcast</option>
+                                    </select>
                                 </div>
-                            </div>
 
-                            <!-- Season (One-Hot Encoded) -->
-                            <div class="feature-section">
-                                <div class="feature-section-title">Season (Select one)</div>
-                                <div class="checkbox-group">
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="season_spring" name="season" value="spring">
-                                        <label for="season_spring">Spring</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="season_summer" name="season" value="summer">
-                                        <label for="season_summer">Summer</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="season_winter" name="season" value="winter">
-                                        <label for="season_winter">Winter</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="season_fall" name="season" value="fall">
-                                        <label for="season_fall">Fall/Autumn</label>
-                                    </div>
+                                <!-- Season -->
+                                <div class="feature-input-group">
+                                    <label>Season</label>
+                                    <select id="season" class="ant-input" required>
+                                        <option value="">-- Select --</option>
+                                        <option value="spring">Spring</option>
+                                        <option value="summer">Summer</option>
+                                        <option value="autumn">Autumn</option>
+                                        <option value="fall">Fall</option>
+                                        <option value="winter">Winter</option>
+                                    </select>
                                 </div>
-                            </div>
 
-                            <!-- Location (One-Hot Encoded) -->
-                            <div class="feature-section">
-                                <div class="feature-section-title">Location (Select one)</div>
-                                <div class="checkbox-group">
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="location_inland" name="location" value="inland">
-                                        <label for="location_inland">Inland</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="location_mountain" name="location" value="mountain">
-                                        <label for="location_mountain">Mountain</label>
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="location_coastal" name="location" value="coastal">
-                                        <label for="location_coastal">Coastal</label>
-                                    </div>
+                                <!-- Location -->
+                                <div class="feature-input-group">
+                                    <label>Location</label>
+                                    <select id="location" class="ant-input" required>
+                                        <option value="">-- Select --</option>
+                                        <option value="inland">Inland</option>
+                                        <option value="mountain">Mountain</option>
+                                        <option value="coastal">Coastal</option>
+                                    </select>
                                 </div>
                             </div>
 
                             <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 12px; margin-top: 16px;">
-                                Or enter all 15 features as comma-separated values (Temperature, Humidity, Wind Speed, Precipitation, Atmospheric Pressure, UV Index, Visibility, Cloud Cover_cloudy, Cloud Cover_overcast, Cloud Cover_partly cloudy, Season_Spring, Season_Summer, Season_Winter, Location_inland, Location_mountain)
+                                Or enter all 10 features as comma-separated values (Temperature, Humidity, Wind Speed, Precipitation, Atmospheric Pressure, UV Index, Visibility, Cloud Cover, Season, Location)
                             </div>
                             <input type="text" id="features" class="ant-input"
-                                   placeholder="25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, 0, 0, 1, 0, 1, 0, 1, 0"
+                                   placeholder="25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, cloudy, summer, inland"
                                    style="margin-top: 12px; font-family: 'Courier New', monospace;">
                             </div>
                         </div>
@@ -639,37 +824,15 @@
                     <form id="batchForm" class="ant-form ant-form-vertical">
                         <div class="ant-form-item">
                         <div class="ant-form-item-label">
-                            <label class="ant-form-item-required">Team Member</label>
-                        </div>
-                            <div class="ant-form-item-control">
-                            <div class="team-member-select-wrapper">
-                                <input type="text" id="batchModelName" class="team-member-select"
-                                       placeholder="Search or select a team member..."
-                                       autocomplete="off" required>
-                                <div id="batchModelNameDropdown" class="team-member-dropdown"></div>
-                                <input type="hidden" id="batchModelNameValue" name="modelName" value="">
-                            </div>
-                            <div id="batchTeamMemberInfo" class="team-member-info" style="display: none;">
-                                <span class="team-member-info-icon">👤</span>
-                                <span id="batchSelectedMemberName"></span>
-                                <span class="team-member-badge" id="batchModelStatusBadge">Model Ready</span>
-                            </div>
-                            <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 11px; margin-top: 4px;">
-                                Type to search team members
-                            </div>
-                            </div>
-                        </div>
-                        <div class="ant-form-item">
-                        <div class="ant-form-item-label">
                             <label class="ant-form-item-required">Feature Vectors</label>
                         </div>
                             <div class="ant-form-item-control">
                                 <textarea id="batchFeatures" class="ant-input"
-                                      placeholder="25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, 0, 0, 1, 0, 1, 0, 1, 0&#10;15.0, 80.0, 25.0, 50.0, 1005.0, 2.0, 5.0, 1, 0, 0, 1, 0, 0, 0, 1&#10;30.0, 40.0, 5.0, 0.0, 1020.0, 8.0, 15.0, 0, 1, 0, 0, 0, 1, 1, 0"
+                                      placeholder="25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, cloudy, summer, inland&#10;15.0, 80.0, 25.0, 50.0, 1005.0, 2.0, 5.0, overcast, spring, mountain&#10;30.0, 40.0, 5.0, 0.0, 1020.0, 8.0, 15.0, partly cloudy, autumn, coastal"
                                           rows="6" required
                                       style="font-family: 'Courier New', monospace; resize: vertical;"></textarea>
                             <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 12px; margin-top: 4px;">
-                                Each line: 15 features (Temperature, Humidity, Wind Speed, Precipitation, Atmospheric Pressure, UV Index, Visibility, Cloud Cover_cloudy, Cloud Cover_overcast, Cloud Cover_partly cloudy, Season_Spring, Season_Summer, Season_Winter, Location_inland, Location_mountain)
+                                Each line: 10 features (Temperature, Humidity, Wind Speed, Precipitation, Atmospheric Pressure, UV Index, Visibility, Cloud Cover, Season, Location)
                                 </div>
                             </div>
                         </div>
@@ -681,39 +844,64 @@
                     </form>
                     <div id="batchResult"></div>
                 </div>
-
-                <!-- Model Info Tab -->
-                <div id="models-content" class="tab-content" style="display: none;">
-                <button class="ant-btn ant-btn-primary" onclick="loadModelInfoDisplay()" style="margin-bottom: 16px;">
-                        Refresh Model Info
-                    </button>
-                    <div id="modelInfo"></div>
-                </div>
         </div>
     </div>
 
     <script>
         const API_BASE = '/api/v1';
 
-        // Weather type mapping
+        // Weather type mapping with proper display names
         const weatherTypes = {
-            'sunny': { class: 'weather-sunny', emoji: '☀️' },
-            'rainy': { class: 'weather-rainy', emoji: '🌧️' },
-            'cloudy': { class: 'weather-cloudy', emoji: '☁️' },
-            'snowy': { class: 'weather-snowy', emoji: '❄️' },
-            'stormy': { class: 'weather-stormy', emoji: '⛈️' },
-            'foggy': { class: 'weather-foggy', emoji: '🌫️' }
+            'sunny': { class: 'weather-sunny', emoji: '☀️', name: 'Sunny' },
+            'rainy': { class: 'weather-rainy', emoji: '🌧️', name: 'Rainy' },
+            'cloudy': { class: 'weather-cloudy', emoji: '☁️', name: 'Cloudy' },
+            'snowy': { class: 'weather-snowy', emoji: '❄️', name: 'Snowy' }
         };
+
+        // Numeric label to weather type mapping (from model training)
+        const numericLabels = {
+            0: 'cloudy',
+            1: 'rainy',
+            2: 'snowy',
+            3: 'sunny'
+        };
+
+        // Get weather color based on class
+        function getWeatherColor(weatherClass) {
+            const colorMap = {
+                'weather-sunny': '#fa8c16',
+                'weather-cloudy': '#bfbfbf',
+                'weather-rainy': '#595959',
+                'weather-snowy': '#1890ff'
+            };
+            return colorMap[weatherClass] || '#1890ff';
+        }
 
         // Get weather type styling
         function getWeatherTypeClass(prediction) {
-            const predStr = String(prediction).toLowerCase();
+            // Handle numeric predictions
+            if (typeof prediction === 'number' || !isNaN(Number(prediction))) {
+                const numPred = Number(prediction);
+                const weatherType = numericLabels[numPred];
+                if (weatherType && weatherTypes[weatherType]) {
+                    return weatherTypes[weatherType];
+                }
+            }
+            
+            // Handle string predictions
+            const predStr = String(prediction).toLowerCase().trim();
             for (const [type, info] of Object.entries(weatherTypes)) {
-                if (predStr.includes(type)) {
+                if (predStr.includes(type) || predStr === type) {
                     return info;
                 }
             }
-            return { class: 'weather-cloudy', emoji: '🌤️' };
+            
+            // Default fallback - show the prediction as-is
+            return { 
+                class: 'weather-cloudy', 
+                emoji: '🌤️', 
+                name: `Unknown (${prediction})`
+            };
         }
 
         // Handle checkbox groups (only one selection per group)
@@ -832,38 +1020,26 @@
                 return el ? parseFloat(el.value) || 0 : 0;
             });
 
-            // Cloud Cover one-hot (3)
-            const cloudCoverFeatures = [
-                document.getElementById('cloudCover_cloudy')?.checked ? 1 : 0,
-                document.getElementById('cloudCover_overcast')?.checked ? 1 : 0,
-                document.getElementById('cloudCover_partly_cloudy')?.checked ? 1 : 0
-            ];
-
-            // Season one-hot (3)
-            const seasonFeatures = [
-                document.getElementById('season_spring')?.checked ? 1 : 0,
-                document.getElementById('season_summer')?.checked ? 1 : 0,
-                document.getElementById('season_winter')?.checked ? 1 : 0
-            ];
-
-            // Location one-hot (2)
-            const locationFeatures = [
-                document.getElementById('location_inland')?.checked ? 1 : 0,
-                document.getElementById('location_mountain')?.checked ? 1 : 0
-            ];
+            // Categorical features (3) - plain values, not one-hot encoded
+            const cloudCover = document.getElementById('cloudCover')?.value || '';
+            const season = document.getElementById('season')?.value || '';
+            const location = document.getElementById('location')?.value || '';
 
             // Combine all features
-            const allFeatures = [...numericFeatures, ...cloudCoverFeatures, ...seasonFeatures, ...locationFeatures];
+            const allFeatures = [
+                ...numericFeatures,
+                cloudCover,
+                season,
+                location
+            ];
 
-            // If all numeric are 0 and no checkboxes selected, try comma-separated input
-            if (numericFeatures.every(f => f === 0) && cloudCoverFeatures.every(f => f === 0) &&
-                seasonFeatures.every(f => f === 0) && locationFeatures.every(f => f === 0)) {
+            // If all numeric are 0 and no categorical values, try comma-separated input
+            if (numericFeatures.every(f => f === 0) && !cloudCover && !season && !location) {
                 const featuresInput = document.getElementById('features').value;
                 if (featuresInput) {
                     const parsed = featuresInput.split(',')
-                        .map(f => parseFloat(f.trim()))
-                        .filter(f => !isNaN(f));
-                    if (parsed.length === 15) {
+                        .map(f => f.trim());
+                    if (parsed.length === 10) {
                         return parsed;
                     }
                 }
@@ -925,8 +1101,17 @@
                 const text = document.getElementById('statusText');
 
                 if (data.status === 'healthy') {
-                    indicator.className = 'status-indicator online';
-                    text.textContent = 'API Online';
+                    // Check if model is ready
+                    const readyResponse = await fetch('/health/ready');
+                    const readyData = await readyResponse.json();
+                    
+                    if (readyData.status === 'ready') {
+                        indicator.className = 'status-indicator online';
+                        text.textContent = '✓ API Online - Model Ready';
+                    } else {
+                        indicator.className = 'status-indicator offline';
+                        text.textContent = '⚠️ API Online - ' + (readyData.message || 'Model Not Configured');
+                    }
                 } else {
                     indicator.className = 'status-indicator offline';
                     text.textContent = 'API Offline';
@@ -940,180 +1125,14 @@
         // Store available models globally
         let availableModels = [];
 
-        // Load model info
+        // Load model info (no longer needed with single model, kept for compatibility)
         async function loadModelInfo() {
             try {
                 const response = await fetch(`${API_BASE}/models`);
                 const data = await response.json();
                 availableModels = data.available_models || [];
-
-                // Setup searchable dropdowns after a small delay to ensure DOM is ready
-                setTimeout(() => {
-                    setupSearchableDropdown('modelName', 'modelNameDropdown', 'modelNameValue', 'single');
-                    setupSearchableDropdown('batchModelName', 'batchModelNameDropdown', 'batchModelNameValue', 'batch');
-                }, 100);
             } catch (error) {
                 console.error('Failed to load model info:', error);
-            }
-        }
-
-        // Setup searchable dropdown
-        function setupSearchableDropdown(inputId, dropdownId, hiddenInputId, type) {
-            const input = document.getElementById(inputId);
-            const dropdown = document.getElementById(dropdownId);
-            const hiddenInput = document.getElementById(hiddenInputId);
-
-            if (!input || !dropdown) {
-                console.error(`Missing elements for ${inputId}:`, { input, dropdown });
-                return;
-            }
-
-            let selectedIndex = -1;
-            let filteredModels = [];
-
-            // Populate dropdown
-            function populateDropdown(models) {
-                dropdown.innerHTML = '';
-                filteredModels = models;
-
-                if (models.length === 0) {
-                    const option = document.createElement('div');
-                    option.className = 'team-member-option';
-                    option.textContent = 'No team members found';
-                    option.style.color = 'rgba(0, 0, 0, 0.45)';
-                    dropdown.appendChild(option);
-                } else {
-                    models.forEach((model, index) => {
-                        const option = document.createElement('div');
-                        option.className = 'team-member-option';
-                        option.textContent = model;
-                        option.dataset.value = model;
-                        option.dataset.index = index;
-
-                        option.addEventListener('click', function() {
-                            selectTeamMember(model, inputId, hiddenInputId, type);
-                        });
-
-                        dropdown.appendChild(option);
-                    });
-                }
-            }
-
-            // Filter models
-            function filterModels(searchTerm) {
-                if (!searchTerm) {
-                    return availableModels;
-                }
-                const term = searchTerm.toLowerCase();
-                return availableModels.filter(model =>
-                    model.toLowerCase().includes(term)
-                );
-            }
-
-            // Select team member
-            function selectTeamMember(model, inputId, hiddenInputId, type) {
-                const inputEl = document.getElementById(inputId);
-                const hiddenEl = document.getElementById(hiddenInputId);
-
-                if (inputEl) inputEl.value = model;
-                if (hiddenEl) hiddenEl.value = model;
-
-                dropdown.classList.remove('show');
-                updateTeamMemberInfo(model, type);
-            }
-
-            // Input event
-            input.addEventListener('input', function(e) {
-                const searchTerm = e.target.value;
-                const filtered = filterModels(searchTerm);
-                populateDropdown(filtered);
-                if (filtered.length > 0 || searchTerm.length > 0) {
-                    dropdown.classList.add('show');
-                } else {
-                    dropdown.classList.remove('show');
-                }
-                selectedIndex = -1;
-
-                if (!searchTerm) {
-                    hiddenInput.value = '';
-                    updateTeamMemberInfo('', type);
-                }
-            });
-
-            // Focus event
-            input.addEventListener('focus', function() {
-                if (availableModels.length > 0) {
-                    populateDropdown(availableModels);
-                    dropdown.classList.add('show');
-                } else {
-                    // Try to load models if not loaded yet
-                    loadModelInfo().then(() => {
-                        if (availableModels.length > 0) {
-                            populateDropdown(availableModels);
-                            dropdown.classList.add('show');
-                        }
-                    });
-                }
-            });
-
-            // Keyboard navigation
-            input.addEventListener('keydown', function(e) {
-                if (!dropdown.classList.contains('show')) return;
-
-                const options = dropdown.querySelectorAll('.team-member-option:not([style*="color: rgba"])');
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    selectedIndex = Math.min(selectedIndex + 1, options.length - 1);
-                    updateHighlight(options, selectedIndex);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    selectedIndex = Math.max(selectedIndex - 1, -1);
-                    updateHighlight(options, selectedIndex);
-                } else if (e.key === 'Enter' && selectedIndex >= 0 && options[selectedIndex]) {
-                    e.preventDefault();
-                    const model = options[selectedIndex].dataset.value;
-                    selectTeamMember(model, inputId, hiddenInputId, type);
-                } else if (e.key === 'Escape') {
-                    dropdown.classList.remove('show');
-                }
-            });
-
-            function updateHighlight(options, index) {
-                options.forEach((opt, i) => {
-                    opt.classList.toggle('highlight', i === index);
-                });
-            }
-
-            // Close dropdown when clicking outside
-            const clickOutsideHandler = function(e) {
-                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.classList.remove('show');
-                }
-            };
-            // Use a small delay to avoid immediate closure
-            setTimeout(() => {
-                document.addEventListener('click', clickOutsideHandler);
-            }, 100);
-        }
-
-        // Update team member info display
-        function updateTeamMemberInfo(modelName, type) {
-            const prefix = type === 'single' ? '' : 'batch';
-            const infoDiv = document.getElementById(`${prefix}TeamMemberInfo`);
-            const nameSpan = document.getElementById(`${prefix}SelectedMemberName`);
-            const badge = document.getElementById(`${prefix}ModelStatusBadge`);
-
-            if (modelName && modelName.trim() !== '') {
-                if (infoDiv) infoDiv.style.display = 'flex';
-                if (nameSpan) nameSpan.textContent = modelName;
-                if (badge) {
-                    badge.textContent = 'Model Ready';
-                    badge.style.background = '#e6f7ff';
-                    badge.style.color = '#1890ff';
-                }
-            } else {
-                if (infoDiv) infoDiv.style.display = 'none';
             }
         }
 
@@ -1129,14 +1148,9 @@
 
                 try {
                     const features = getFeaturesFromForm();
-                    const modelName = document.getElementById('modelNameValue').value || document.getElementById('modelName').value;
 
-                    if (features.length === 0 || features.every(f => f === 0)) {
+                    if (features.length === 0 || (features.slice(0, 7).every(f => f === 0) && !features[7] && !features[8] && !features[9])) {
                         throw new Error('Please enter valid features');
-                    }
-
-                    if (!modelName || modelName.trim() === '') {
-                        throw new Error('Please select a team member');
                     }
 
                     const response = await fetch(`${API_BASE}/predict`, {
@@ -1145,8 +1159,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        features: features,
-                        model_name: modelName
+                        features: features
                     })
                     });
 
@@ -1195,43 +1208,73 @@
                     }
 
                     const weatherInfo = getWeatherTypeClass(data.prediction);
-                    const weatherType = String(data.prediction).toLowerCase();
-                    const weatherDisplay = weatherType.charAt(0).toUpperCase() + weatherType.slice(1);
 
                     resultDiv.innerHTML = `
-                    <div class="ant-alert ant-alert-success">
-                        <div class="ant-alert-message">Prediction Result</div>
-                        <div class="ant-alert-description">
-                            <div class="result-item">
-                                <div style="margin-bottom: 8px;"><strong>Model:</strong> ${data.model_name}</div>
-                                <div style="margin-top: 12px; margin-bottom: 12px;">
-                                    <span class="weather-type ${weatherInfo.class}">
-                                        ${weatherInfo.emoji} ${weatherDisplay}
-                                    </span>
-                                </div>
-                                ${data.confidence !== null ? `
-                                    <div style="margin-top: 12px;">
-                                        <div style="margin-bottom: 8px;"><strong>Confidence:</strong> ${(data.confidence * 100).toFixed(2)}%</div>
-                                        <div class="confidence-bar">
-                                            <div class="confidence-fill" style="width: ${data.confidence * 100}%">
-                                                ${(data.confidence * 100).toFixed(1)}%
-                                            </div>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                <div style="margin-top: 12px;">
-                                    <strong>Input Features:</strong><br>
-                                    Temperature: ${features[0] || 'N/A'}°C |
-                                    Humidity: ${features[1] || 'N/A'}% |
-                                    Wind Speed: ${features[2] || 'N/A'} km/h<br>
-                                    Precipitation: ${features[3] || 'N/A'}% |
-                                    Pressure: ${features[4] || 'N/A'} hPa |
-                                    UV Index: ${features[5] || 'N/A'}<br>
-                                    Visibility: ${features[6] || 'N/A'} km
-                                </div>
+                    <div class="prediction-result-card ${weatherInfo.class}">
+                        <div class="prediction-header">
+                            <h3 class="prediction-title">Weather Prediction</h3>
+                        </div>
+                        
+                        ${data.used_fallback ? `
+                            <div class="fallback-banner">
+                                <span class="fallback-icon">⚠️</span>
+                                <span class="fallback-text">Using default/fallback model - specific model not found</span>
                             </div>
+                        ` : ''}
+                        
+                        <div class="weather-display-card">
+                            <div class="weather-label">Predicted Weather</div>
+                            <div class="weather-main">
+                                <div class="weather-icon-large">${weatherInfo.emoji}</div>
+                                <div class="weather-name-large" style="color: ${getWeatherColor(weatherInfo.class)};">${weatherInfo.name}</div>
                             </div>
                         </div>
+                        
+                        ${data.confidence !== null ? `
+                            <div class="confidence-section">
+                                <div class="confidence-label">
+                                    <span>Confidence Level</span>
+                                    <span class="confidence-percentage">${(data.confidence * 100).toFixed(1)}%</span>
+                                </div>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${data.confidence * 100}%">
+                                        ${(data.confidence * 100).toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <div class="info-card-label">Temperature</div>
+                                <div class="info-card-value">${features[0]}<span class="info-card-unit">°C</span></div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Humidity</div>
+                                <div class="info-card-value">${features[1]}<span class="info-card-unit">%</span></div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Wind Speed</div>
+                                <div class="info-card-value">${features[2]}<span class="info-card-unit">km/h</span></div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Precipitation</div>
+                                <div class="info-card-value">${features[3]}<span class="info-card-unit">%</span></div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Pressure</div>
+                                <div class="info-card-value">${features[4]}<span class="info-card-unit">hPa</span></div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">UV Index</div>
+                                <div class="info-card-value">${features[5]}</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-label">Visibility</div>
+                                <div class="info-card-value">${features[6]}<span class="info-card-unit">km</span></div>
+                            </div>
+                        </div>
+                    </div>
                     `;
                 } catch (error) {
                     console.error('Prediction error:', error);
@@ -1296,19 +1339,27 @@
                     const featuresText = document.getElementById('batchFeatures').value;
                     const featuresList = featuresText
                         .split('\n')
-                        .map(line => line.split(',')
-                            .map(f => parseFloat(f.trim()))
-                            .filter(f => !isNaN(f)))
-                        .filter(arr => arr.length > 0);
-
-                    const modelName = document.getElementById('batchModelNameValue').value || document.getElementById('batchModelName').value;
+                        .map(line => {
+                            const parts = line.split(',').map(f => f.trim());
+                            if (parts.length !== 10) return null;
+                            // Parse numeric features (0-6) and keep categorical features (7-9) as strings
+                            return [
+                                parseFloat(parts[0]),
+                                parseFloat(parts[1]),
+                                parseFloat(parts[2]),
+                                parseFloat(parts[3]),
+                                parseFloat(parts[4]),
+                                parseFloat(parts[5]),
+                                parseFloat(parts[6]),
+                                parts[7],
+                                parts[8],
+                                parts[9]
+                            ];
+                        })
+                        .filter(arr => arr !== null && arr.slice(0, 7).every(f => !isNaN(f)));
 
                     if (featuresList.length === 0) {
-                        throw new Error('Please enter valid feature vectors');
-                    }
-
-                    if (!modelName || modelName.trim() === '') {
-                        throw new Error('Please select a team member');
+                        throw new Error('Please enter valid feature vectors (10 features each: 7 numeric + 3 categorical)');
                     }
 
                     const response = await fetch(`${API_BASE}/predict/batch`, {
@@ -1317,8 +1368,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        features: featuresList,
-                        model_name: modelName
+                        features: featuresList
                     })
                     });
 
@@ -1367,27 +1417,43 @@
                     }
 
                     let resultsHtml = `
-                    <div class="ant-alert ant-alert-success">
-                        <div class="ant-alert-message">Batch Prediction Results (${data.length} predictions)</div>
-                        <div class="ant-alert-description">
+                    <div style="margin-bottom: 20px; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                        <h3 style="font-size: 20px; font-weight: 700; color: #262626; margin-bottom: 8px;">Batch Prediction Results</h3>
+                        <p style="color: rgba(0,0,0,0.45); margin: 0;">${data.length} predictions completed</p>
+                    </div>
                     `;
 
                     data.forEach((pred, index) => {
                         const weatherInfo = getWeatherTypeClass(pred.prediction);
-                        const weatherType = String(pred.prediction).toLowerCase();
-                        const weatherDisplay = weatherType.charAt(0).toUpperCase() + weatherType.slice(1);
 
                         resultsHtml += `
-                            <div class="result-item" style="margin-bottom: 12px;">
-                                <div style="font-weight: 600; margin-bottom: 8px; color: #1890ff;">Prediction #${index + 1}</div>
-                                <div style="margin-top: 8px; margin-bottom: 12px;">
-                                    <span class="weather-type ${weatherInfo.class}">
-                                        ${weatherInfo.emoji} ${weatherDisplay}
-                                    </span>
+                            <div class="prediction-result-card ${weatherInfo.class}" style="margin-bottom: 24px;">
+                                <div class="prediction-header">
+                                    <h3 class="prediction-title">Prediction #${index + 1}</h3>
+                                    <div class="model-badge">${pred.model_name || 'Model'}</div>
                                 </div>
+                                
+                                ${pred.used_fallback ? `
+                                    <div class="fallback-banner">
+                                        <span class="fallback-icon">⚠️</span>
+                                        <span class="fallback-text">Using default/fallback model</span>
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="weather-display-card">
+                                    <div class="weather-label ${weatherInfo.class}">Predicted Weather</div>
+                                    <div class="weather-main">
+                                        <div class="weather-icon-large">${weatherInfo.emoji}</div>
+                                        <div class="weather-name-large" style="color: ${getWeatherColor(weatherInfo.class)};">${weatherInfo.name}</div>
+                                    </div>
+                                </div>
+                                
                                 ${pred.confidence !== null ? `
-                                    <div style="margin-top: 12px;">
-                                        <div style="margin-bottom: 8px;"><strong>Confidence:</strong> ${(pred.confidence * 100).toFixed(2)}%</div>
+                                    <div class="confidence-section">
+                                        <div class="confidence-label">
+                                            <span>Confidence Level</span>
+                                            <span class="confidence-percentage">${(pred.confidence * 100).toFixed(1)}%</span>
+                                        </div>
                                         <div class="confidence-bar">
                                             <div class="confidence-fill" style="width: ${pred.confidence * 100}%">
                                                 ${(pred.confidence * 100).toFixed(1)}%
@@ -1395,20 +1461,29 @@
                                         </div>
                                     </div>
                                 ` : ''}
-                                <div style="margin-top: 12px;">
-                                    <strong>Conditions:</strong> Temp: ${featuresList[index][0] || 'N/A'}°C,
-                                    Humidity: ${featuresList[index][1] || 'N/A'}%,
-                                    Wind: ${featuresList[index][2] || 'N/A'} km/h,
-                                    Pressure: ${featuresList[index][4] || 'N/A'} hPa
+                                
+                                <div class="info-grid">
+                                    <div class="info-card">
+                                        <div class="info-card-label">Temperature</div>
+                                        <div class="info-card-value">${featuresList[index][0]}<span class="info-card-unit">°C</span></div>
+                                    </div>
+                                    <div class="info-card">
+                                        <div class="info-card-label">Humidity</div>
+                                        <div class="info-card-value">${featuresList[index][1]}<span class="info-card-unit">%</span></div>
+                                    </div>
+                                    <div class="info-card">
+                                        <div class="info-card-label">Wind Speed</div>
+                                        <div class="info-card-value">${featuresList[index][2]}<span class="info-card-unit">km/h</span></div>
+                                    </div>
+                                    <div class="info-card">
+                                        <div class="info-card-label">Pressure</div>
+                                        <div class="info-card-value">${featuresList[index][4]}<span class="info-card-unit">hPa</span></div>
+                                    </div>
                                 </div>
                             </div>
                         `;
                     });
 
-                resultsHtml += `
-                        </div>
-                    </div>
-                `;
                     resultDiv.innerHTML = resultsHtml;
                 } catch (error) {
                     console.error('Batch prediction error:', error);
