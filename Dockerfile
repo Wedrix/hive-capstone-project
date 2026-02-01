@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY app/ ./app/
 
+# Copy models directory
+COPY models/ ./models/
+
 # Create models directory for runtime artifact mounting
 RUN mkdir -p ./models
 
