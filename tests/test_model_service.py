@@ -2,9 +2,6 @@
 Tests for model service
 """
 
-import numpy as np
-import pytest
-
 from app.services.model_service import ModelService
 
 
@@ -46,22 +43,26 @@ class TestModelService:
 
     def test_predict_single(self):
         """Test single prediction"""
-        features = [1.0, 2.0, 3.0, 4.0]
-        prediction, confidence = ModelService.predict(features)
+        # 10 features: 7 numeric + 3 categorical (cloud_cover, season, location)
+        features = [25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"]
+        prediction, confidence, model_id = ModelService.predict(features)
 
         assert prediction is not None
-        assert isinstance(prediction, (int, float, list))
-        # Confidence may be None if model doesn't support it
+        assert isinstance(prediction, (int, float, str, list))
         assert confidence is None or isinstance(confidence, float)
+        assert model_id is not None and isinstance(model_id, str)
 
     def test_predict_batch(self):
         """Test batch prediction"""
-        features_list = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
+        features_list = [
+            [25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"],
+            [15.0, 80.0, 25.0, 50.0, 1005.0, 2.0, 5.0, "overcast", "spring", "mountain"],
+        ]
         predictions = ModelService.predict_batch(features_list)
 
         assert len(predictions) == len(features_list)
-        for pred, conf in predictions:
+        for pred, conf, model_id in predictions:
             assert pred is not None
-            assert isinstance(pred, (int, float, list))
+            assert isinstance(pred, (int, float, str, list))
             assert conf is None or isinstance(conf, float)
-
+            assert model_id is not None and isinstance(model_id, str)

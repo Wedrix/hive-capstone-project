@@ -188,7 +188,7 @@ The categorical features are transformed into one-hot encoded vectors on the bac
 
    # Save the model
    joblib.dump(model, 'models/model.joblib')
-   
+
    # Save the scaler
    joblib.dump(scaler, 'models/scaler.joblib')
    ```

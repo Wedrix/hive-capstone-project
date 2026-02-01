@@ -3,11 +3,10 @@ Weather Inference endpoints
 """
 
 import logging
-import re
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from app.services.model_service import ModelService
 
@@ -17,15 +16,20 @@ router = APIRouter()
 
 
 class PredictionRequest(BaseModel):
-    """Request model for predictions
-    
-    Accepts features as: [temp, humidity, wind_speed, precipitation, pressure, uv_index, visibility, cloud_cover, season, location]
-    where cloud_cover, season, location are categorical string values
+    """Request model for predictions.
+
+    Features: temp, humidity, wind_speed, precipitation, pressure, uv_index,
+    visibility, cloud_cover, season, location (7 numeric + 3 categorical).
     """
 
     model_config = {"protected_namespaces": ()}
 
-    features: List[Union[float, str]] = Field(..., min_length=10, max_length=1000, description="Feature values: 7 numeric + 3 categorical")
+    features: List[Union[float, str]] = Field(
+        ..., min_length=10, max_length=1000, description="Feature values: 7 numeric + 3 categorical"
+    )
+    model_id: Optional[str] = (
+        None  # e.g. 'model', 'logistic_regression_model'. Default: first available.
+    )
 
 
 class BatchPredictionRequest(BaseModel):
@@ -34,14 +38,36 @@ class BatchPredictionRequest(BaseModel):
     model_config = {"protected_namespaces": ()}
 
     features: List[List[Union[float, str]]] = Field(
-        ..., min_length=1, max_length=1000, description="List of feature vectors: 7 numeric + 3 categorical each"
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="List of feature vectors: 7 numeric + 3 categorical each",
     )
+    model_id: Optional[str] = None  # Which model to use for inference.
+
 
 class PredictionResponse(BaseModel):
     """Response model for predictions"""
 
     prediction: Any
-    confidence: float = None
+    confidence: Optional[float] = None
+    model_id: Optional[str] = None  # Model used for this prediction
+
+
+@router.get("/models")
+async def list_models():
+    """
+    List available inference models (ids and display names).
+    """
+    try:
+        available = ModelService.get_available_models()
+        return {
+            "available_models": available,
+            "models_loaded": ModelService.are_models_loaded(),
+        }
+    except Exception as e:
+        logger.error(f"List models failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to list models.")
 
 
 @router.post("/predict", response_model=PredictionResponse)
@@ -50,10 +76,10 @@ async def predict(request: PredictionRequest):
     Single prediction endpoint
 
     Args:
-        request: PredictionRequest with 10 features (7 numeric + 3 categorical)
+        request: PredictionRequest with 10 features (7 numeric + 3 categorical), optional model_id
 
     Returns:
-        PredictionResponse with prediction result
+        PredictionResponse with prediction result and model_id used
     """
     try:
         if not ModelService.are_models_loaded():
@@ -62,9 +88,11 @@ async def predict(request: PredictionRequest):
                 detail="Models are not loaded. Please wait for initialization.",
             )
 
-        prediction, confidence = ModelService.predict(features=request.features)
+        prediction, confidence, model_id = ModelService.predict(
+            features=request.features, model_id=request.model_id or None
+        )
 
-        return PredictionResponse(prediction=prediction, confidence=confidence)
+        return PredictionResponse(prediction=prediction, confidence=confidence, model_id=model_id)
     except ValueError as e:
         # Input validation errors - safe to expose
         raise HTTPException(status_code=400, detail=str(e))
@@ -100,11 +128,13 @@ async def predict_batch(request: BatchPredictionRequest):
                 detail="Models are not loaded. Please wait for initialization.",
             )
 
-        predictions = ModelService.predict_batch(features_list=request.features)
+        predictions = ModelService.predict_batch(
+            features_list=request.features, model_id=request.model_id or None
+        )
 
         return [
-            PredictionResponse(prediction=pred, confidence=conf)
-            for pred, conf in predictions
+            PredictionResponse(prediction=pred, confidence=conf, model_id=mid)
+            for pred, conf, mid in predictions
         ]
     except ValueError as e:
         # Input validation errors - safe to expose

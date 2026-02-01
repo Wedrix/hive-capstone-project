@@ -76,12 +76,12 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transition: transform 0.2s;
         }
-        
+
         .weather-type:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0,0,0,0.2);
         }
-        
+
         .weather-type .weather-icon {
             font-size: 4em;
             line-height: 1;
@@ -214,19 +214,19 @@
             margin-bottom: 24px;
             transition: background 0.3s ease;
         }
-        
+
         .prediction-result-card.weather-sunny {
             background: linear-gradient(135deg, #fff7e6 0%, #ffd591 100%);
         }
-        
+
         .prediction-result-card.weather-rainy {
             background: linear-gradient(135deg, #e8e8e8 0%, #bfbfbf 100%);
         }
-        
+
         .prediction-result-card.weather-cloudy {
             background: linear-gradient(135deg, #fafafa 0%, #e6e6e6 100%);
         }
-        
+
         .prediction-result-card.weather-snowy {
             background: linear-gradient(135deg, #e6f7ff 0%, #91d5ff 100%);
         }
@@ -274,19 +274,19 @@
             margin-bottom: 16px;
             transition: color 0.3s ease;
         }
-        
+
         .weather-label.weather-cloudy {
             color: #bfbfbf;
         }
-        
+
         .weather-label.weather-rainy {
             color: #595959;
         }
-        
+
         .weather-label.weather-snowy {
             color: #1890ff;
         }
-        
+
         .weather-label.weather-sunny {
             color: #fa8c16;
         }
@@ -811,6 +811,17 @@
                             </div>
                         </div>
                         <div class="ant-form-item">
+                            <div class="ant-form-item-label">
+                                <label>Model</label>
+                            </div>
+                            <div class="ant-form-item-control">
+                                <select id="singleModelId" class="ant-input" style="max-width: 280px;">
+                                    <option value="">Default (first available)</option>
+                                </select>
+                                <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 12px; margin-top: 4px;">Choose which model to use for inference</div>
+                            </div>
+                        </div>
+                        <div class="ant-form-item">
                         <button type="submit" class="ant-btn ant-btn-primary" id="singleSubmit">
                                 Predict
                             </button>
@@ -831,9 +842,20 @@
                                       placeholder="25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, cloudy, summer, inland&#10;15.0, 80.0, 25.0, 50.0, 1005.0, 2.0, 5.0, overcast, spring, mountain&#10;30.0, 40.0, 5.0, 0.0, 1020.0, 8.0, 15.0, partly cloudy, autumn, coastal"
                                           rows="6" required
                                       style="font-family: 'Courier New', monospace; resize: vertical;"></textarea>
-                            <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 12px; margin-top: 4px;">
+                                <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 12px; margin-top: 4px;">
                                 Each line: 10 features (Temperature, Humidity, Wind Speed, Precipitation, Atmospheric Pressure, UV Index, Visibility, Cloud Cover, Season, Location)
                                 </div>
+                            </div>
+                        </div>
+                        <div class="ant-form-item">
+                            <div class="ant-form-item-label">
+                                <label>Model</label>
+                            </div>
+                            <div class="ant-form-item-control">
+                                <select id="batchModelId" class="ant-input" style="max-width: 280px;">
+                                    <option value="">Default (first available)</option>
+                                </select>
+                                <div class="ant-form-item-explain" style="color: rgba(0, 0, 0, 0.45); font-size: 12px; margin-top: 4px;">Choose which model to use for inference</div>
                             </div>
                         </div>
                         <div class="ant-form-item">
@@ -887,7 +909,7 @@
                     return weatherTypes[weatherType];
                 }
             }
-            
+
             // Handle string predictions
             const predStr = String(prediction).toLowerCase().trim();
             for (const [type, info] of Object.entries(weatherTypes)) {
@@ -895,11 +917,11 @@
                     return info;
                 }
             }
-            
+
             // Default fallback - show the prediction as-is
-            return { 
-                class: 'weather-cloudy', 
-                emoji: '🌤️', 
+            return {
+                class: 'weather-cloudy',
+                emoji: '🌤️',
                 name: `Unknown (${prediction})`
             };
         }
@@ -1104,7 +1126,7 @@
                     // Check if model is ready
                     const readyResponse = await fetch('/health/ready');
                     const readyData = await readyResponse.json();
-                    
+
                     if (readyData.status === 'ready') {
                         indicator.className = 'status-indicator online';
                         text.textContent = '✓ API Online - Model Ready';
@@ -1122,18 +1144,43 @@
             }
         }
 
-        // Store available models globally
+        // Store available models globally: [{ id, name }, ...]
         let availableModels = [];
 
-        // Load model info (no longer needed with single model, kept for compatibility)
+        // Populate model selector dropdowns
+        function populateModelSelectors() {
+            const singleSelect = document.getElementById('singleModelId');
+            const batchSelect = document.getElementById('batchModelId');
+            if (!singleSelect || !batchSelect) return;
+            // Keep "Default" option, then add model options
+            while (singleSelect.options.length > 1) singleSelect.remove(1);
+            while (batchSelect.options.length > 1) batchSelect.remove(1);
+            availableModels.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.name;
+                singleSelect.appendChild(opt);
+                batchSelect.appendChild(opt.cloneNode(true));
+            });
+        }
+
+        // Load model info and populate dropdowns
         async function loadModelInfo() {
             try {
                 const response = await fetch(`${API_BASE}/models`);
                 const data = await response.json();
                 availableModels = data.available_models || [];
+                populateModelSelectors();
             } catch (error) {
                 console.error('Failed to load model info:', error);
             }
+        }
+
+        // Get display name for model id
+        function getModelDisplayName(modelId) {
+            if (!modelId) return 'Default';
+            const m = availableModels.find(x => x.id === modelId);
+            return m ? m.name : modelId;
         }
 
         // Single prediction
@@ -1153,13 +1200,15 @@
                         throw new Error('Please enter valid features');
                     }
 
+                    const modelId = document.getElementById('singleModelId')?.value || '';
                     const response = await fetch(`${API_BASE}/predict`, {
                         method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        features: features
+                        features: features,
+                        model_id: modelId || null
                     })
                     });
 
@@ -1209,19 +1258,21 @@
 
                     const weatherInfo = getWeatherTypeClass(data.prediction);
 
+                    const modelLabel = getModelDisplayName(data.model_id);
                     resultDiv.innerHTML = `
                     <div class="prediction-result-card ${weatherInfo.class}">
                         <div class="prediction-header">
                             <h3 class="prediction-title">Weather Prediction</h3>
+                            <span class="model-badge">${modelLabel}</span>
                         </div>
-                        
+
                         ${data.used_fallback ? `
                             <div class="fallback-banner">
                                 <span class="fallback-icon">⚠️</span>
                                 <span class="fallback-text">Using default/fallback model - specific model not found</span>
                             </div>
                         ` : ''}
-                        
+
                         <div class="weather-display-card">
                             <div class="weather-label">Predicted Weather</div>
                             <div class="weather-main">
@@ -1229,7 +1280,7 @@
                                 <div class="weather-name-large" style="color: ${getWeatherColor(weatherInfo.class)};">${weatherInfo.name}</div>
                             </div>
                         </div>
-                        
+
                         ${data.confidence !== null ? `
                             <div class="confidence-section">
                                 <div class="confidence-label">
@@ -1243,7 +1294,7 @@
                                 </div>
                             </div>
                         ` : ''}
-                        
+
                         <div class="info-grid">
                             <div class="info-card">
                                 <div class="info-card-label">Temperature</div>
@@ -1362,13 +1413,15 @@
                         throw new Error('Please enter valid feature vectors (10 features each: 7 numeric + 3 categorical)');
                     }
 
+                    const batchModelId = document.getElementById('batchModelId')?.value || '';
                     const response = await fetch(`${API_BASE}/predict/batch`, {
                         method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        features: featuresList
+                        features: featuresList,
+                        model_id: batchModelId || null
                     })
                     });
 
@@ -1425,21 +1478,22 @@
 
                     data.forEach((pred, index) => {
                         const weatherInfo = getWeatherTypeClass(pred.prediction);
+                        const batchModelLabel = getModelDisplayName(pred.model_id);
 
                         resultsHtml += `
                             <div class="prediction-result-card ${weatherInfo.class}" style="margin-bottom: 24px;">
                                 <div class="prediction-header">
                                     <h3 class="prediction-title">Prediction #${index + 1}</h3>
-                                    <div class="model-badge">${pred.model_name || 'Model'}</div>
+                                    <div class="model-badge">${batchModelLabel}</div>
                                 </div>
-                                
+
                                 ${pred.used_fallback ? `
                                     <div class="fallback-banner">
                                         <span class="fallback-icon">⚠️</span>
                                         <span class="fallback-text">Using default/fallback model</span>
                                     </div>
                                 ` : ''}
-                                
+
                                 <div class="weather-display-card">
                                     <div class="weather-label ${weatherInfo.class}">Predicted Weather</div>
                                     <div class="weather-main">
@@ -1447,7 +1501,7 @@
                                         <div class="weather-name-large" style="color: ${getWeatherColor(weatherInfo.class)};">${weatherInfo.name}</div>
                                     </div>
                                 </div>
-                                
+
                                 ${pred.confidence !== null ? `
                                     <div class="confidence-section">
                                         <div class="confidence-label">
@@ -1461,7 +1515,7 @@
                                         </div>
                                     </div>
                                 ` : ''}
-                                
+
                                 <div class="info-grid">
                                     <div class="info-card">
                                         <div class="info-card-label">Temperature</div>
@@ -1534,35 +1588,31 @@
                 }
             });
 
-        // Load model info display
+        // Load model info display (for Models tab if present)
         async function loadModelInfoDisplay() {
+            const infoDiv = document.getElementById('modelInfo');
+            if (!infoDiv) return;
             try {
                 const response = await fetch(`${API_BASE}/models`);
                 const data = await response.json();
-
-                // Update available models
                 availableModels = data.available_models || [];
-
-                // Display model info
-                const infoDiv = document.getElementById('modelInfo');
-                const modelsList = data.available_models.length > 0
-                    ? data.available_models.map((model, idx) => `${idx + 1}. ${model}`).join('<br>')
+                const modelsList = availableModels.length > 0
+                    ? availableModels.map((m, idx) => `${idx + 1}. ${m.name} (${m.id})`).join('<br>')
                     : 'None';
-
                 infoDiv.innerHTML = `
                     <div class="ant-alert ant-alert-success">
-                        <div class="ant-alert-message">Available Team Member Models</div>
+                        <div class="ant-alert-message">Available inference models</div>
                         <div class="ant-alert-description">
                         <div class="result-item">
-                            <div style="margin-bottom: 12px;"><strong>Models Loaded:</strong> ${data.models_loaded ? 'Yes ✓' : 'No ✗'}</div>
-                            <div style="margin-top: 12px;"><strong>Team Members / Models (${data.available_models.length}):</strong></div>
+                            <div style="margin-bottom: 12px;"><strong>Models loaded:</strong> ${data.models_loaded ? 'Yes ✓' : 'No ✗'}</div>
+                            <div style="margin-top: 12px;"><strong>Models (${availableModels.length}):</strong></div>
                             <div style="margin-top: 8px; line-height: 1.8;">${modelsList}</div>
                             </div>
                         </div>
                     </div>
                 `;
             } catch (error) {
-                document.getElementById('modelInfo').innerHTML = `
+                infoDiv.innerHTML = `
                     <div class="ant-alert ant-alert-error">
                         <div class="ant-alert-message">Error</div>
                         <div class="ant-alert-description">Failed to load model information: ${error.message}</div>

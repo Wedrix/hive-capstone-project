@@ -25,11 +25,14 @@ def client():
 
 @pytest.fixture(scope="function")
 def sample_features():
-    """Sample feature vector for testing"""
-    return [1.0, 2.0, 3.0, 4.0]
+    """Sample feature vector for testing (10 features: 7 numeric + 3 categorical)"""
+    return [25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"]
 
 
 @pytest.fixture(scope="function")
 def sample_batch_features():
-    """Sample batch feature vectors for testing"""
-    return [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
+    """Sample batch feature vectors for testing (10 features each)"""
+    return [
+        [25.0, 60.0, 10.0, 0.0, 1013.25, 5.0, 10.0, "cloudy", "summer", "inland"],
+        [15.0, 80.0, 25.0, 50.0, 1005.0, 2.0, 5.0, "overcast", "spring", "mountain"],
+    ]
